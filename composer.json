@@ -1,2 +1,7 @@
 {
+  "require": {
+    "ext-mysqli": "*",
+    "ext-simplexml": "*",
+    "ext-dom": "*"
+  }
 }

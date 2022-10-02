@@ -14,7 +14,15 @@ Installation
 
 4. Install the needed dependencies using: composer install
 
-5. run the program 
+5. In the main class change the __construct mysqli used values:
+   - 'localhost'
+   - 'user'
+   - 'password'
+   - 'products' 
+
+   to the appropriate values for your database
+
+6. run the program 
 
 <h1>Description</h1>
 

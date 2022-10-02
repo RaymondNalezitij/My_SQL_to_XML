@@ -1,11 +1,16 @@
 <?php
 
-class mySQLFunctions
+namespace App;
+
+use DOMDocument;
+use mysqli;
+
+class mySQLtoXML
 {
     private mysqli $mySql;
 
     public function __construct() {
-        $this->mySql = new mysqli("localhost", "user", "password", "webdev-homework");
+        $this->mySql = new mysqli('localhost','user','password','products');
     }
 
     public function getProductName($product_id, $language_id): string {
@@ -118,7 +123,7 @@ class mySQLFunctions
     }
 }
 
-$mySql = new mySQLFunctions;
+$mySql = new mySQLtoXML;
 
 $product = mysqli_query(
     $mySql->getMySql(),
