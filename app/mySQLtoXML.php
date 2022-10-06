@@ -1,22 +1,17 @@
 <?php
 
-namespace App;
-
-use DOMDocument;
-use mysqli;
-
 class mySQLtoXML
 {
     private mysqli $mySql;
 
     public function __construct() {
-        $this->mySql = new mysqli('localhost','user','password','products');
+        $this->mySql = new mysqli('localhost', 'user', 'password', 'products');
     }
 
     public function getProductName($product_id, $language_id): string {
         $sql = mysqli_fetch_array(mysqli_query(
             $this->mySql,
-            "SELECT name FROM product_description where product_id = {$product_id} and language_id = {$language_id}"
+            "SELECT name FROM product_description where product_id = '$product_id' and language_id = '$language_id'"
         ));
         return $sql['name'];
     }
@@ -24,15 +19,11 @@ class mySQLtoXML
     public function getProductDescription($product_id, $language_id): string {
         $sql = mysqli_fetch_array(mysqli_query(
             $this->mySql,
-            "SELECT meta_description FROM product_description where product_id = {$product_id} and language_id = {$language_id}"
+            "SELECT meta_description FROM product_description where product_id = '$product_id' and language_id = '$language_id'"
         ));
         if (strlen($sql['meta_description']) > 200) {
-            while (strlen($sql['meta_description']) > 200) {
-                $words = explode(" ", $sql['meta_description']);
-                array_splice($words, -1);
-                $sql['meta_description'] = implode(" ", $words);
-            }
-            return $sql['meta_description'] . "...";
+            $x = strstr(wordwrap($sql['meta_description'], 200), "\n", true);
+            return $x . "...";
         } else {
             return $sql['meta_description'];
         }
@@ -47,25 +38,20 @@ class mySQLtoXML
     }
 
     public function convertDate($date): string {
-        $dateArray = explode(" ", $date);
-        $reverseDateArray = explode("-", $dateArray[0]);
-        $year = $reverseDateArray[0];
-        $reverseDateArray[0] = $reverseDateArray[2];
-        $z[2] = $year;
-        return implode("-", $z);
+        return date("d-m-Y", strtotime($date));
     }
 
     public function getSpecialPrice($product_id): string {
         $sql = mysqli_query(
             $this->mySql,
-            "SELECT price, date_end FROM product_special where product_id = {$product_id}"
+            "SELECT price, date_end FROM product_special where product_id = '$product_id'"
         );
         if ($sql->num_rows == 0) {
             return "";
         } else {
             $sql = mysqli_fetch_array(mysqli_query(
                 $this->mySql,
-                "SELECT price, date_end FROM product_special where product_id = {$product_id}"
+                "SELECT price, date_end FROM product_special where product_id = '$product_id'"
             ));
             if (strtotime(date('y-m-d')) <= strtotime($sql['date_end'])) {
                 return number_format($sql["price"] + ($sql["price"] / 100 * 21), 2, ".");
@@ -75,50 +61,49 @@ class mySQLtoXML
         }
     }
 
-    public function getCategoryNumber($product_id): array{
+    public function getCategoryNumber($product_id): array {
         return mysqli_fetch_array(mysqli_query(
             $this->mySql,
-            "SELECT category_id FROM product_to_category where product_id = {$product_id}"
+            "SELECT category_id FROM product_to_category where product_id = '$product_id'"
         ));
     }
 
     public function getProductCategory($category_id): string {
-
+        $category_id = $category_id["category_id"];
         $category_name = mysqli_fetch_array(mysqli_query(
             $this->mySql,
-            "SELECT name FROM category_description where category_id = {$category_id["category_id"]} and language_id = 1"
+            "SELECT name FROM category_description where category_id = '$category_id' and language_id = 1"
         ));
-
         return $category_name["name"];
     }
 
     public function getFullProductCategory($category_id): string {
-
         $full_category = [$this->getProductCategory($category_id)];
+        $category_id = $category_id["category_id"];
 
         $parent_id = mysqli_fetch_array(mysqli_query(
             $this->mySql,
-            "SELECT parent_id FROM category where category_id = {$category_id["category_id"]}"
+            "SELECT parent_id FROM category where category_id = '$category_id'"
         ));
 
-        while($parent_id['parent_id'] !== "0"){
+        while ($parent_id['parent_id'] !== "0") {
+            $parent_id = $parent_id["parent_id"];
             $category = mysqli_fetch_array(mysqli_query(
                 $this->mySql,
-                "SELECT name FROM category_description where category_id = {$parent_id["parent_id"]} and language_id = 1"
+                "SELECT name FROM category_description where category_id = '$parent_id' and language_id = 1"
             ));
 
             $full_category[] = $category['name'];
 
             $parent_id = mysqli_fetch_array(mysqli_query(
                 $this->mySql,
-                "SELECT parent_id FROM category where category_id = {$parent_id["parent_id"]}"
+                "SELECT parent_id FROM category where category_id = '$parent_id'"
             ));
         }
-        return(implode(" >> ",array_reverse($full_category)));
+        return (implode(" >> ", array_reverse($full_category)));
     }
 
-    public function getMySql(): mysqli
-    {
+    public function getMySql(): mysqli {
         return $this->mySql;
     }
 }
