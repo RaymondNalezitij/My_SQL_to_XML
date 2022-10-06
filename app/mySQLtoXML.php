@@ -3,9 +3,13 @@
 class mySQLtoXML
 {
     private mysqli $mySql;
+    private string $servername = "localhost";
+    private string $username = "user";
+    private string $password = "password";
+    private string $dbname = "products";
 
     public function __construct() {
-        $this->mySql = new mysqli('localhost', 'user', 'password', 'products');
+        $this->mySql = new mysqli($this->servername, $this->username, $this->password, $this->dbname);
     }
 
     public function getProductName($product_id, $language_id): string {
@@ -54,7 +58,7 @@ class mySQLtoXML
                 "SELECT price, date_end FROM product_special where product_id = '$product_id'"
             ));
             if (strtotime(date('y-m-d')) <= strtotime($sql['date_end'])) {
-                return number_format($sql["price"] + ($sql["price"] / 100 * 21), 2, ".");
+                return number_format($sql["price"] + ($sql["price"] / 100 * 21), 2);
             } else {
                 return "";
             }
@@ -102,7 +106,6 @@ class mySQLtoXML
         }
         return (implode(" >> ", array_reverse($full_category)));
     }
-
     public function getMySql(): mysqli {
         return $this->mySql;
     }
@@ -134,7 +137,7 @@ while ($repository = mysqli_fetch_array($product)) {
     $xml .= "<ean>" . $repository["ean"] . "</ean>";
     $xml .= "<image>" . $mySql->checkImageLink($repository["image"]) . "</image>";
     $xml .= "<date_added>" . $mySql->convertDate($repository["date_added"]) . "</date_added>";
-    $xml .= "<price>" . number_format($repository["price"] + ($repository["price"] / 100 * 21), 2, ".") . "</price>";
+    $xml .= "<price>" . number_format($repository["price"] + ($repository["price"] / 100 * 21), 2) . "</price>";
     $xml .= "<special_price>" . $mySql->getSpecialPrice($repository["product_id"]) . "</special_price>";
     $xml .= "<category>" . $mySql->getProductCategory($mySql->getCategoryNumber($repository["product_id"])) . "</category>";
     $xml .= "<full_category>" . htmlspecialchars_decode($mySql->getFullProductCategory($mySql->getCategoryNumber($repository["product_id"]))) . "</full_category>";

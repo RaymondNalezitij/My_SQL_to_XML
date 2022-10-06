@@ -14,7 +14,9 @@ Installation
 
 4. Install the needed dependencies using: composer install
 
-5. In the main class change the __construct mysqli used values:
+5. Run 'products.sql' to create the database. (it will auto generate a schema called products and add all the tables in to it)
+
+6. In the mySQLtoXML main class change the private string values:
    - 'localhost'
    - 'user'
    - 'password'
@@ -22,7 +24,7 @@ Installation
 
    to the appropriate values for your database
 
-6. run the program 
+7. run the program mySQLtoXML.php
 
 <h1>Description</h1>
 
