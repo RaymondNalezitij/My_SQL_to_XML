@@ -112,41 +112,49 @@ class mySQLtoXML
 }
 
 $mySql = new mySQLtoXML;
-
 $product = mysqli_query(
     $mySql->getMySql(),
-    "SELECT * FROM product",
+    "SELECT * FROM product"
 );
 
-$xml = "<root>";
-while ($repository = mysqli_fetch_array($product)) {
-    $xml .= "<item>";
-    $xml .= "<model>" . $repository["model"] . "</model>";
-    $xml .= "<status>" . $repository["status"] . "</status>";
-    $xml .= "<name>";
-    $xml .= "<lv>" . $mySql->getProductName($repository["product_id"], 1) . "</lv>";
-    $xml .= "<en>" . $mySql->getProductName($repository["product_id"], 2) . "</en>";
-    $xml .= "<ru>" . $mySql->getProductName($repository["product_id"], 3) . "</ru>";
-    $xml .= "</name>";
-    $xml .= "<description>";
-    $xml .= "<lv>" . $mySql->getProductDescription($repository["product_id"], 1) . "</lv>";
-    $xml .= "<en>" . $mySql->getProductDescription($repository["product_id"], 2) . "</en>";
-    $xml .= "<ru>" . $mySql->getProductDescription($repository["product_id"], 3) . "</ru>";
-    $xml .= "</description>";
-    $xml .= "<quantity>" . $repository["quantity"] . "</quantity>";
-    $xml .= "<ean>" . $repository["ean"] . "</ean>";
-    $xml .= "<image>" . $mySql->checkImageLink($repository["image"]) . "</image>";
-    $xml .= "<date_added>" . $mySql->convertDate($repository["date_added"]) . "</date_added>";
-    $xml .= "<price>" . number_format($repository["price"] + ($repository["price"] / 100 * 21), 2) . "</price>";
-    $xml .= "<special_price>" . $mySql->getSpecialPrice($repository["product_id"]) . "</special_price>";
-    $xml .= "<category>" . $mySql->getProductCategory($mySql->getCategoryNumber($repository["product_id"])) . "</category>";
-    $xml .= "<full_category>" . htmlspecialchars_decode($mySql->getFullProductCategory($mySql->getCategoryNumber($repository["product_id"]))) . "</full_category>";
-    $xml .= "</item>";
-}
-$xml .= "</root>";
-
-$dom = new DOMDocument('1.0', 'UTF-8');
-$dom->loadXML($xml);
+$dom = new DOMDocument(1.0, 'utf-8');
 $dom->formatOutput = true;
-$dom->encoding = "utf-8";
-$dom->save('products.xml');
+
+try {
+    $root = $dom->appendChild($dom->createElement('root'));
+    while ($repository = mysqli_fetch_array($product)) {
+
+        $item = $dom->createElement('item');
+        $root->appendChild($item);
+
+        $model = $dom->createElement('model', $repository["model"]);
+        $status = $dom->createElement('status', $repository["status"]);
+        $name = $dom->createElement('name');
+        $description = $dom->createElement('description');
+
+        $nameLv = $dom->createElement('lv', $mySql->getProductName($repository["product_id"], 1));
+        $nameEn = $dom->createElement('en', $mySql->getProductName($repository["product_id"], 2));
+        $nameRu = $dom->createElement('ru', $mySql->getProductName($repository["product_id"], 3));
+
+        $descriptionLv = $dom->createElement('lv', $mySql->getProductDescription($repository["product_id"], 1));
+        $descriptionEn = $dom->createElement('en', $mySql->getProductDescription($repository["product_id"], 2));
+        $descriptionRu = $dom->createElement('ru', $mySql->getProductDescription($repository["product_id"], 3));
+
+        $quantity = $dom->createElement('quantity', $repository["quantity"]);
+        $ean = $dom->createElement('ean', $repository["ean"]);
+        $image = $dom->createElement('image', $mySql->checkImageLink($repository["image"]));
+        $date_added = $dom->createElement('date_added', $mySql->convertDate($repository["date_added"]));
+        $price = $dom->createElement('price', number_format($repository["price"] + ($repository["price"] / 100 * 21), 2));
+        $special_price = $dom->createElement('special_price', $mySql->getSpecialPrice($repository["product_id"]));
+        $category = $dom->createElement('category', $mySql->getProductCategory($mySql->getCategoryNumber($repository["product_id"])));
+        $full_category = $dom->createElement('full_category', htmlspecialchars_decode($mySql->getFullProductCategory($mySql->getCategoryNumber($repository["product_id"]))));
+
+        $item->append($model, $status, $name, $description, $quantity, $ean, $image, $date_added, $price, $special_price, $category, $full_category);
+        $name->append($nameLv, $nameEn, $nameRu);
+        $description->append($descriptionLv, $descriptionEn, $descriptionRu);
+    }
+} catch (DOMException $e) {
+    echo "XML write error";
+}
+
+$dom->save("products.xml");
